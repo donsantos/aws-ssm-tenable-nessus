@@ -1,0 +1,24 @@
+---
+schemaVersion: '2.2'
+description: "Install Tenable Nessus Agent"
+mainSteps:
+- action: aws:runPowerShellScript
+  precondition:
+    StringEquals:
+    - "platformType"
+    - "Windows"
+  name: "InstallTenableNessusWindows"
+  inputs:
+   runCommand:
+   - "if (!(test-path c:\temp\nessus) -eq $true) { New-Item -ItemType Directory -path 'C:\temp\nessus' }"
+   - Invoke-WebRequest -Uri {{windows_agent_download_url}} -UseBasicParsing -OutFile "C:\temp\nessus\NessusAgent-{{version}}-x64.msi"
+   - Invoke-Command -ScriptBlock { & msiexec /i C:\temp\nessus\NessusAgent-{{version}}-x64.msi NESSUS_GROUPS=""  NESSUS_SERVER="{{host}}:{{port}}" NESSUS_ KEY={{key}} /qn }
+- action: "aws:runShellScript"
+  precondition:
+    StringEquals:
+    - "platformType"
+    - "Linux"
+  name: "InstallTenableNessusLinux"
+  inputs:
+   runCommand:
+   - cd /tmp && curl -O {{shell_script_url}} && sudo bash /tmp/installnessuslinux.sh
